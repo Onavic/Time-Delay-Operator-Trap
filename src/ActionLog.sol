@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+/// @title ActionLog
+/// @notice Canonical on-chain record of operator actions
 contract ActionLog {
-    mapping(address => uint256) public lastAction;
-    mapping(address => bytes32) public lastActionHash;
+    mapping(address => uint256) private lastActionBlock;
 
-    function logAction(address operator, bytes32 actionHash) external {
-        lastAction[operator] = block.number;
-        lastActionHash[operator] = actionHash;
+    function logAction(address operator) external {
+        lastActionBlock[operator] = block.number;
     }
 
-    function getLastAction(
+    function getLastActionBlock(
         address operator
-    ) external view returns (uint256, bytes32) {
-        return (lastAction[operator], lastActionHash[operator]);
+    ) external view returns (uint256) {
+        return lastActionBlock[operator];
     }
 }

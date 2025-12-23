@@ -7,25 +7,26 @@ drosera_address = "0x91cB447BaFc6e0EA0F4Fe056F5a9b1F14bb06e5D"
 # === Trap configuration section ===
 [traps]
 
-# Your custom Time-Delay Operator Trap
 [traps.time_delay_operator]
-# Path to the trap ABI artifact
+# Path to the compiled trap artifact
 path = "out/TimeDelayOperatorTrap.sol/TimeDelayOperatorTrap.json"
 
-# Your deployed responder contract address
-response_contract = "0xb5a2814B916064b502C282A8BE60d1A9602C5E75"
+# Deployed TimeDelayOperatorResponder (LATEST)
+response_contract = "0x864bfc588968C66661858f650dBfd5b5c1478acC"
 
-# The responder function Drosera will call when the trap is triggered
-response_function = "respond(address)"
+# Drosera responder signature (MUST be bytes)
+response_function = "respond(bytes)"
 
-# How many blocks worth of samples Drosera should inspect
+# Trap evaluates recent blocks
 block_sample_size = 5
 
-# Blocks Drosera should wait before calling your responder again
+# No cooldown for now (can be tuned later)
 cooldown_period_blocks = 0
 
-# Whether this trap is private (recommended)
+# Keep private
 private_trap = true
 
-# Address(es) allowed to trigger / interact with this trap
-whitelist = ["0xd4d37413680cc2b8c2ea621993f6a2e226c48a6c"]
+# Operator allowlist
+whitelist = [
+  "0xD4D37413680CC2B8C2EA621993F6A2E226C48A6C"
+]

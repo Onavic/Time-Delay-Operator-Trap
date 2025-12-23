@@ -2,30 +2,56 @@
 pragma solidity ^0.8.20;
 
 interface IActionLog {
-    function getLastAction(
+    function getLastActionBlock(
         address operator
-    ) external view returns (uint256, bytes32);
+    ) external view returns (uint256);
 }
 
+/// @title TimeDelayOperatorTrap (Drosera-native)
 contract TimeDelayOperatorTrap {
-    IActionLog public actionLog;
-    uint256 public blockDelay = 5; // N blocks
+    /// -----------------------------------------------------------------------
+    /// HARD-CODED CONFIG (required by Drosera)
+    /// -----------------------------------------------------------------------
 
-    mapping(address => uint256) public lastActionBlock;
+    // Operator this trap monitors (one trap per operator)
+    address public constant OPERATOR =
+        0xD4D37413680CC2B8C2Ea621993F6A2e226C48a6C;
 
-    constructor(address _actionLog) {
-        actionLog = IActionLog(_actionLog);
+    // Minimum blocks required between actions
+    uint256 public constant MIN_BLOCK_DELAY = 5;
+
+    // Deployed ActionLog (read-only)
+    address public constant ACTION_LOG =
+        0xf738Dddc0EFca5ad17a5B5EA83b9c3d613f4ea13;
+
+    /// -----------------------------------------------------------------------
+    /// Drosera interface
+    /// -----------------------------------------------------------------------
+
+    /// @notice Collect read-only data for Drosera sampling
+    function collect() external view returns (bytes memory) {
+        uint256 lastActionBlock = IActionLog(ACTION_LOG).getLastActionBlock(
+            OPERATOR
+        );
+
+        return abi.encode(OPERATOR, lastActionBlock, block.number);
     }
 
-    function recordAction(address operator) external {
-        lastActionBlock[operator] = block.number;
-    }
+    /// @notice Decide whether responder should fire
+    function shouldRespond(
+        bytes[] calldata data
+    ) external pure returns (bool, bytes memory) {
+        (address operator, uint256 lastActionBlock, uint256 currentBlock) = abi
+            .decode(data[0], (address, uint256, uint256));
 
-    function shouldRespond(address operator) external view returns (bool) {
-        uint256 lastBlock = lastActionBlock[operator];
-        if (block.number < lastBlock + blockDelay) {
-            return true; // trigger trap
+        if (lastActionBlock == 0) {
+            return (false, bytes(""));
         }
-        return false; // safe
+
+        if (currentBlock < lastActionBlock + MIN_BLOCK_DELAY) {
+            return (true, abi.encode(operator));
+        }
+
+        return (false, bytes(""));
     }
 }
